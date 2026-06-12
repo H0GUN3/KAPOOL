@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: kapool-postgres
+    environment:
+      POSTGRES_DB: kapool
+      POSTGRES_USER: kapool
+      POSTGRES_PASSWORD: kapool_local_password
+    ports:
+      - "55432:5432"
+    volumes:
+      - kapool-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kapool -d kapool"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  kapool-postgres-data:

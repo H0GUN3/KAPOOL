@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  passenger
+  driver
+  admin
+}
+
+enum RideStatus {
+  open
+  full
+  closed
+}
+
+enum ReservationStatus {
+  pending
+  approved
+  rejected
+  cancelled
+  completed
+}
+
+enum PaymentStatus {
+  unpaid
+  paid
+  disputed
+  waived
+}
+
+enum ReportType {
+  settlement_missing
+  inappropriate_chat
+  safety_issue
+  account_auth
+}
+
+enum ReportStatus {
+  open
+  in_review
+  resolved
+  dismissed
+}
+
+enum ChatMessageType {
+  system
+  sysinfo
+  other
+  me
+}
+
+model User {
+  id                    String             @id @default(uuid())
+  email                 String             @unique
+  passwordHash          String
+  role                  UserRole
+  isAdmin               Boolean            @default(false)
+  isSuspended           Boolean            @default(false)
+  adminNote             String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  profile               Profile?
+  vehicles              Vehicle[]
+  driverRides           Ride[]             @relation("RideDriver")
+  reservations          Reservation[]      @relation("PassengerReservations")
+  sentMessages          ChatMessage[]
+  rideRequests          RideRequest[]      @relation("PassengerRideRequests")
+  settlementPayments    SettlementRecord[] @relation("SettlementPayer")
+  settlementReceipts    SettlementRecord[] @relation("SettlementReceiver")
+  submittedReports      Report[]           @relation("ReportReporter")
+  subjectReports        Report[]           @relation("ReportSubject")
+  reportMessages        ReportMessage[]
+}
+
+model Profile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  name        String
+  nickname    String
+  schoolEmail String   @unique
+  department  String
+  phone       String?
+  homeRegion  String?
+  photoDataUrl String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Vehicle {
+  id            String   @id @default(uuid())
+  ownerId       String
+  model         String
+  color         String
+  capacity      Int
+  plateLastFour String?
+  photoDataUrl  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  rides         Ride[]
+}
+
+model Ride {
+  id            String        @id @default(uuid())
+  from          String
+  to            String
+  departureTime DateTime
+  seats         Int
+  fare          Int
+  status        RideStatus    @default(open)
+  driverId      String
+  vehicleId     String?
+  waypoints     String[]      @default([])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  driver        User          @relation("RideDriver", fields: [driverId], references: [id], onDelete: Restrict)
+  vehicle       Vehicle?      @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  reservations  Reservation[]
+  chatRooms     ChatRoom[]
+  settlements   SettlementRecord[]
+  reports       Report[]
+}
+
+model Reservation {
+  id               String              @id @default(uuid())
+  rideId           String
+  passengerId      String
+  status           ReservationStatus   @default(pending)
+  seatsRequested   Int
+  message          String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  ride             Ride                @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  passenger        User                @relation("PassengerReservations", fields: [passengerId], references: [id], onDelete: Restrict)
+  chatRooms        ChatRoom[]
+  settlements      SettlementRecord[]
+  reports          Report[]
+
+  @@unique([rideId, passengerId])
+}
+
+model RideRequest {
+  id          String   @id @default(uuid())
+  passengerId String
+  from        String
+  to          String
+  time        String
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  passenger   User     @relation("PassengerRideRequests", fields: [passengerId], references: [id], onDelete: Restrict)
+  chatRooms   ChatRoom[]
+
+  @@index([passengerId])
+  @@index([createdAt])
+}
+
+model ChatRoom {
+  id             String        @id @default(uuid())
+  rideId         String?
+  reservationId  String?
+  rideRequestId  String?
+  participantIds String[]      @default([])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  ride           Ride?         @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  reservation    Reservation?  @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  rideRequest    RideRequest?  @relation(fields: [rideRequestId], references: [id], onDelete: Cascade)
+  messages       ChatMessage[]
+  reports        Report[]      @relation("ReportContextChatRoom")
+  operationReports Report[]    @relation("ReportOperationChatRoom")
+
+  @@unique([rideRequestId])
+}
+
+model ChatMessage {
+  id        String          @id @default(uuid())
+  roomId    String
+  senderId  String?
+  type      ChatMessageType
+  text      String
+  createdAt DateTime        @default(now())
+  room      ChatRoom        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender    User?           @relation(fields: [senderId], references: [id], onDelete: SetNull)
+}
+
+model SettlementRecord {
+  id            String        @id @default(uuid())
+  rideId        String
+  reservationId String
+  payerId       String
+  receiverId    String
+  amount        Int
+  status        PaymentStatus @default(unpaid)
+  note          String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  ride          Ride          @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  reservation   Reservation   @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  payer         User          @relation("SettlementPayer", fields: [payerId], references: [id], onDelete: Restrict)
+  receiver      User          @relation("SettlementReceiver", fields: [receiverId], references: [id], onDelete: Restrict)
+  reports       Report[]
+}
+
+model Report {
+  id               String            @id @default(uuid())
+  type             ReportType
+  status           ReportStatus      @default(open)
+  reporterId       String
+  rideId           String?
+  reservationId    String?
+  chatRoomId       String?
+  operationChatRoomId String?
+  paymentRecordId  String?
+  subjectUserId    String?
+  description      String
+  adminNote        String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  reporter         User              @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Restrict)
+  ride             Ride?             @relation(fields: [rideId], references: [id], onDelete: SetNull)
+  reservation      Reservation?      @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  chatRoom         ChatRoom?         @relation("ReportContextChatRoom", fields: [chatRoomId], references: [id], onDelete: SetNull)
+  operationChatRoom ChatRoom?        @relation("ReportOperationChatRoom", fields: [operationChatRoomId], references: [id], onDelete: SetNull)
+  paymentRecord    SettlementRecord? @relation(fields: [paymentRecordId], references: [id], onDelete: SetNull)
+  subjectUser      User?             @relation("ReportSubject", fields: [subjectUserId], references: [id], onDelete: SetNull)
+  messages         ReportMessage[]
+}
+
+model ReportMessage {
+  id        String   @id @default(uuid())
+  reportId  String
+  senderId  String
+  text      String
+  createdAt DateTime @default(now())
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([reportId, createdAt])
+}

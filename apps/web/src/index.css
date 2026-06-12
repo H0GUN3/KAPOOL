@@ -1,0 +1,106 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap");
+@import "tailwindcss";
+
+:root {
+  --background: #f8f1e4;
+  --foreground: #17130e;
+  --kapool-bg-raised: #fff9ef;
+  --kapool-mint: #345F53;
+  --kapool-app-frame-max: 30rem;
+  --kapool-grid-pair-min: 9rem;
+  --kapool-grid-action-min: 8.5rem;
+  --kapool-grid-preset-min: 6.5rem;
+  --kapool-request-card-width: clamp(10.5rem, 46vw, 12rem);
+  --kapool-font-sans: "Pretendard", "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background: radial-gradient(circle at 18% -10%, rgba(52, 95, 83, 0.14), transparent 34%), linear-gradient(180deg, #f8f1e4 0%, #f1e6d4 100%);
+  color: var(--foreground);
+  font-family: var(--kapool-font-sans);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  min-width: 0;
+  max-width: 100%;
+}
+
+::placeholder {
+  color: rgba(23, 19, 14, 0.46);
+}
+
+.kapool-app-frame {
+  position: relative;
+  width: min(100%, var(--kapool-app-frame-max));
+  max-width: var(--kapool-app-frame-max);
+  margin-inline: auto;
+  isolation: isolate;
+  overflow-x: clip;
+}
+
+.kapool-fixed-frame {
+  right: auto;
+  left: 50%;
+  width: min(100%, var(--kapool-app-frame-max));
+  transform: translateX(-50%);
+}
+
+.kapool-grid-pair,
+.kapool-grid-actions,
+.kapool-grid-presets {
+  display: grid;
+}
+
+.kapool-grid-pair {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--kapool-grid-pair-min)), 1fr));
+}
+
+.kapool-grid-actions {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--kapool-grid-action-min)), 1fr));
+}
+
+.kapool-grid-presets {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--kapool-grid-preset-min)), 1fr));
+}
+
+.kapool-request-card {
+  flex: 0 0 min(var(--kapool-request-card-width), calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  min-width: 0;
+}
+
+.kapool-grid-pair > *,
+.kapool-grid-actions > *,
+.kapool-grid-presets > * {
+  min-width: 0;
+}
+
+@media (min-width: 30rem) {
+  .kapool-app-frame {
+    border-inline: 1px solid rgba(17, 24, 39, 0.08);
+    box-shadow: 0 0 48px rgba(28, 24, 18, 0.12);
+  }
+}

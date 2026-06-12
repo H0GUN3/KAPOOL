@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -12,13 +13,29 @@
 
 # testing
 /coverage
+.playwright-mcp/
+
+# local agent/tool workspaces
+.omo/
+.opencode/
+.sisyphus/
+
+# local QA screenshots
+*.png
+!apps/web/public/**/*.png
+
+# local presentation/source documents
+docs/**/*.pdf
+docs/**/*.pptx
 
 # next.js
-/.next/
 /out/
 
 # production
 /build
+/dist
+/apps/*/dist
+/packages/*/dist
 
 # misc
 .DS_Store

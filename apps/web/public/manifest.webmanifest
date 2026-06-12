@@ -1,0 +1,27 @@
+{
+  "name": "KAPOOL",
+  "short_name": "KAPOOL",
+  "description": "군산대학교 카풀 서비스 KAPOOL",
+  "start_url": "/app",
+  "display": "standalone",
+  "background_color": "#05091A",
+  "theme_color": "#05091A",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/maskable-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
